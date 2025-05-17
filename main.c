@@ -35,7 +35,44 @@ void start_tracking(GtkWidget *widget, gpointer data) {
 }
 
 void stop_tracking(GtkWidget *widget, gpointer data) {
-    ;
+    system("pkill -f gnome-terminal");
+    system("bash -c 'history -c && rm -f ~/.bash_history'");
+
+    char *bashrc_path = g_strconcat(g_get_home_dir(), "/.bashrc", NULL);
+    FILE *bashrc = fopen(bashrc_path, "r");
+    if (!bashrc) {
+        g_free(bashrc_path);
+        return;
+    }
+
+    fseek(bashrc, 0, SEEK_END);
+    const long length = ftell(bashrc);
+    fseek(bashrc, 0, SEEK_SET);
+
+    char *content = malloc(length + 1);
+    fread(content, 1, length, bashrc);
+    content[length] = '\0';
+    fclose(bashrc);
+
+    char *start = strstr(content, TRACKING_CONFIG);
+    if (start) {
+        const char *end = start + strlen(TRACKING_CONFIG);
+        memmove(start, end, strlen(end) + 1);
+
+        bashrc = fopen(bashrc_path, "w");
+        if (bashrc) {
+            fputs(content, bashrc);
+            fclose(bashrc);
+        }
+    }
+
+    free(content);
+    g_free(bashrc_path);
+
+    system("bash -c 'unset PROMPT_COMMAND'");
+
+    gtk_widget_set_sensitive(start_button, TRUE);
+    gtk_widget_set_sensitive(stop_button, FALSE);
 }
 
 int main(int argc, char *argv[]) {
