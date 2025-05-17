@@ -17,7 +17,21 @@ GtkWidget *warning_label;
 
 
 void start_tracking(GtkWidget *widget, gpointer data) {
-    ;
+    system("pkill -f gnome-terminal");
+    system("bash -c 'history -c && rm -f ~/.bash_history'");
+
+    char *bashrc_path = g_strconcat(g_get_home_dir(), "/.bashrc", NULL);
+    FILE *bashrc = fopen(bashrc_path, "a");
+
+    if (bashrc) {
+        fprintf(bashrc, "%s", TRACKING_CONFIG);
+        fclose(bashrc);
+    }
+
+    g_free(bashrc_path);
+
+    gtk_widget_set_sensitive(start_button, FALSE);
+    gtk_widget_set_sensitive(stop_button, TRUE);
 }
 
 void stop_tracking(GtkWidget *widget, gpointer data) {
